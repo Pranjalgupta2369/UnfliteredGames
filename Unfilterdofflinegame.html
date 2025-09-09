@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNfiltered Games</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0e7ef 0%, #f8fafc 100%);
+            color: #2d3748;
+            min-height: 100vh;
+            position: relative;
+        }
+        /* Animated floating shapes for background depth */
+        .bg-shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.18;
+            filter: blur(16px);
+            z-index: 0;
+            animation: float 8s ease-in-out infinite alternate;
+        }
+        .bg-shape1 { width: 320px; height: 320px; background: #4A6D7C; top: 5%; left: 2%; animation-delay: 0s; }
+        .bg-shape2 { width: 220px; height: 220px; background: #a5b4fc; bottom: 8%; right: 8%; animation-delay: 2s; }
+        .bg-shape3 { width: 180px; height: 180px; background: #fbbf24; top: 60%; left: 60%; animation-delay: 4s; }
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-30px) scale(1.08); }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .main-nav-button {
+            transition: all 0.2s;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+        }
+        .main-nav-button.active, .main-nav-button:hover {
+            background: linear-gradient(90deg, #4A6D7C 60%, #a5b4fc 100%);
+            color: #fff;
+            box-shadow: 0 2px 12px #4A6D7C22;
+        }
+        .game-card-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(.4,0,.2,1);
+        }
+        .game-card-details.open {
+            max-height: 500px;
+        }
+        /* Glassmorphism for cards */
+        .glass-card {
+            background: rgba(255,255,255,0.85);
+            box-shadow: 0 8px 32px 0 rgba(74,109,124,0.10);
+            backdrop-filter: blur(6px);
+            border: 1.5px solid #e0e7ef;
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+        .glass-card:hover {
+            box-shadow: 0 12px 36px 0 #4A6D7C22, 0 2px 8px #a5b4fc33;
+            transform: translateY(-4px) scale(1.02);
+        }
+        /* Fade-in animation for sections */
+        .page-section, .fade-in {
+            opacity: 0;
+            transform: translateY(24px);
+            animation: fadeInUp 0.8s cubic-bezier(.4,0,.2,1) forwards;
+            display: none; /* Hide pages by default */
+        }
+        .page-section.active {
+            display: block; /* Show active page */
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+        /* Enhanced search input */
+        #search-input {
+            background: rgba(255,255,255,0.95);
+            border: 1.5px solid #a5b4fc44;
+            box-shadow: 0 2px 8px #a5b4fc11;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+        #search-input:focus {
+            border: 1.5px solid #4A6D7C;
+            box-shadow: 0 4px 16px #a5b4fc33;
+        }
+        .genre-button {
+             transition: all 0.2s;
+             border-radius: 9999px;
+             padding: 0.5rem 1.2rem;
+             background: rgba(74,109,124,0.08);
+             font-weight: 500;
+        }
+        .genre-button.active, .genre-button:hover {
+             background: linear-gradient(90deg, #4A6D7C 60%, #a5b4fc 100%);
+             color: #fff;
+             font-weight: 600;
+             box-shadow: 0 2px 12px #4A6D7C22;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="bg-shape bg-shape1"></div>
+    <div class="bg-shape bg-shape2"></div>
+    <div class="bg-shape bg-shape3"></div>
+
+    <div class="container mx-auto p-4 md:p-8 relative z-10">
+        <header class="text-center mb-8 fade-in" style="animation-delay:0.1s; display:block;">
+              <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#4A6D7C] to-[#a5b4fc] mb-2 drop-shadow-lg">Unfiltered Games</h1>
+              <p class="text-lg text-gray-600">Your interactive hub for game repacks and data savings.</p>
+        </header>
+
+        <nav class="flex justify-center gap-2 md:gap-4 mb-12 fade-in" style="animation-delay:0.2s; display:flex;">
+            <button class="main-nav-button active" data-page="home">Home</button>
+            <button class="main-nav-button" data-page="games">Unfiltered Games</button>
+            <button class="main-nav-button" data-page="about">About</button>
+            <button class="main-nav-button" data-page="contact">Contact</button>
+        </nav>
+
+        <main id="app">
+            <section id="home" class="page-section active text-center space-y-6">
+                  <div class="glass-card p-8 rounded-lg max-w-4xl mx-auto">
+                    <h2 class="text-3xl font-bold text-[#4A6D7C] mb-4">Welcome to the FitGirl Repacks Hub</h2>
+                    <p class="text-gray-700 leading-relaxed mb-6">
+                        This website provides an interactive way to explore the vast library of game repacks by FitGirl. Navigate through different pages to discover detailed statistics, filter through all available games, and learn more about the project. Use the "Unfiltered Games" tab to access the full interactive dashboard.
+                    </p>
+                    <button class="main-nav-button active" onclick="document.querySelector('[data-page=games]').click()">Explore Unfiltered Games</button>
+                  </div>
+            </section>
+
+            <section id="games" class="page-section space-y-12">
+                <div id="metrics" class="text-center">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div class="glass-card p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold text-gray-500 mb-2">Total Repacks Listed</h3>
+                            <p id="total-games" class="text-4xl font-bold text-[#4A6D7C]">0</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold text-gray-500 mb-2">Avg. Compression</h3>
+                            <p id="avg-compression" class="text-4xl font-bold text-[#4A6D7C]">0%</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold text-gray-500 mb-2">Most Popular Genre</h3>
+                            <p id="popular-genre" class="text-4xl font-bold text-[#4A6D7C]">-</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold text-gray-500 mb-2">Total Data Saved</h3>
+                            <p id="total-saved" class="text-4xl font-bold text-[#4A6D7C]">0 GB</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="filters" class="p-6 glass-card rounded-lg">
+                       <p class="mb-4 text-gray-700 text-center">
+                           This section contains the main interactive controls for the dashboard. You can search for a specific game by title or filter the entire dataset by selecting a genre. Every chart and the game list below will dynamically update based on your selections.
+                       </p>
+                       <div class="flex flex-col md:flex-row gap-4">
+                           <div class="relative flex-grow">
+                               <input type="text" id="search-input" placeholder="Search by game title..." class="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A6D7C] focus:outline-none">
+                               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                               </span>
+                           </div>
+                           <div id="genre-filters" class="flex flex-wrap justify-center gap-2">
+                           </div>
+                       </div>
+                       
+                </div>
+
+                <div id="visualizations">
+                       <p class="mb-8 text-gray-700 text-center max-w-4xl mx-auto">
+                           The charts below provide a visual summary of the filtered data. Hover over any chart element for more detailed information.
+                       </p>
+                       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                           <div class="glass-card p-6 rounded-lg">
+                               <h2 class="text-2xl font-bold text-center mb-4">Genre Distribution</h2>
+                               <div class="chart-container" style="height: 300px; max-height: 350px;">
+                                   <canvas id="genre-chart"></canvas>
+                               </div>
+                           </div>
+                           <div class="glass-card p-6 rounded-lg">
+                               <h2 class="text-2xl font-bold text-center mb-4">Size Comparison (GB)</h2>
+                               <div class="chart-container" style="height: 300px; max-height: 350px;">
+                                   <canvas id="size-chart"></canvas>
+                               </div>
+                           </div>
+                       </div>
+                </div>
+
+                <div id="game-list-section">
+                       <p class="mb-4 text-gray-700 text-center">
+                           Below is the list of available game repacks based on your current filters. Click the "Toggle Details" button on any card for more info.
+                       </p>
+                       <div id="game-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                       </div>
+                </div>
+            </section>
+
+            <section id="about" class="page-section">
+                 <div class="glass-card p-8 rounded-lg max-w-4xl mx-auto space-y-4 text-center">
+                    <h2 class="text-3xl font-bold text-[#4A6D7C]">About FitGirl Repacks</h2>
+                    <p class="text-gray-700 leading-relaxed">
+                        FitGirl Repacks is a well-known name in the gaming community, famous for compressing large PC games into significantly smaller, more manageable downloads without compromising game content. This process, known as "repacking," makes it easier and faster for users with slower internet connections to access games.
+                    </p>
+                     <p class="text-gray-700 leading-relaxed">
+                        The repacks are typically lossless or near-lossless, meaning all essential game files remain intact. Often, optional files like different language packs or 4K textures are made available as selective downloads, further reducing the initial file size.
+                    </p>
+                    <p class="text-gray-700 leading-relaxed font-semibold">
+                        This website is a fan-made project designed to visualize the data behind the repacks, offering an interactive way to see the compression statistics and browse the extensive library.
+                    </p>
+                 </div>
+            </section>
+
+            <section id="contact" class="page-section">
+                 <div class="glass-card p-8 rounded-lg max-w-2xl mx-auto">
+                    <h2 class="text-3xl font-bold text-[#4A6D7C] text-center mb-6">Contact Us</h2>
+                     <form class="space-y-4">
+                         <div>
+                             <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                             <input type="text" id="name" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#4A6D7C] focus:border-[#4A6D7C]">
+                         </div>
+                         <div>
+                             <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                             <input type="email" id="email" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#4A6D7C] focus:border-[#4A6D7C]">
+                         </div>
+                         <div>
+                             <label for="message" class="block text-sm font-medium text-gray-700">Message</label>
+                             <textarea id="message" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#4A6D7C] focus:border-[#4A6D7C]"></textarea>
+                         </div>
+                         <div class="text-center">
+                             <button type="submit" class="main-nav-button active w-full md:w-auto">Send Message</button>
+                         </div>
+                     </form>
+                     <!-- Removed misplaced <img> tag. Images are rendered in the game card template below. -->
+                 </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            const gameData = [
+                    { 
+                        title: "Elden Ring", 
+                        genre: "RPG", 
+                        originalSize: 60, 
+                        repackSize: 38.9, 
+                        year: 2022, 
+                        features: "Includes all DLCs, selective download of voiceovers.", 
+                        requirements: "GTX 1060, 12GB RAM, 60GB disk space.",
+                        coverImage: "./eldenring.jpeg",
+                        magnet: "magnet:?xt=urn:btih:4CC8E331E699748269F6AC1B98B802684F5AC97A&dn=ELDEN+RING%3A+Shadow+of+the+Erdtree+Deluxe+Edition+%28v1.12%2Fv1.12.1+%2B+9+DLCs%2FBonuses+%2B+Windows+7+Fix%2C+MULTi14%29+%5BFitGirl+Repack%2C+Selective+Download+-+from+47.4+GB%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.gbitt.info%3A80%2Fannounce&tr=http%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.theoks.net%3A6969%2Fannounce&tr=https%3A%2F%2Ftracker.tamersunion.org%3A443%2Fannounce&tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&tr=http%3A%2F%2Fopen.acgtracker.com%3A1096%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" 
+                    },
+                    { 
+                        title: "Cyberpunk 2077", 
+                        genre: "RPG", 
+                        originalSize: 110, 
+                        repackSize: 55.2, 
+                        year: 2020, 
+                        features: "Phantom Liberty DLC included, optional HD textures.", 
+                        requirements: "GTX 1060 6GB, 12GB RAM, 110GB SSD space.",
+                        coverImage: "./cyberpunck.jpeg",
+                        magnet: "magnet:?xt=urn:btih:C9D3921BF7017490C74D546C3D0FD6F1E0694422&dn=Cyberpunk+2077%3A+Ultimate+Edition+%28v2.3+%2B+All+DLCs+%2B+Bonus+Content+%2B+REDmod%2C+MULTi19%29+%5BFitGirl+Repack%2C+Selective+Download+-+from+55.7+GB%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.theoks.net%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=https%3A%2F%2Ftracker.tamersunion.org%3A443%2Fannounce&tr=udp%3A%2F%2Fexplodie.org%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.bt4g.com%3A2095%2Fannounce&tr=udp%3A%2F%2Fbt2.archive.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fbt1.archive.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.filemail.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker1.bt.moack.co.kr%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" 
+                    },
+                    { 
+                        title: "Uncharted", 
+                        genre: "RPG", 
+                        originalSize: 150, 
+                        repackSize: 81.7, 
+                        year: 2023, 
+                        features: "Legacy of Thieves Collection, Bonus OSTs.", 
+                        requirements: "GTX 970, 8GB RAM, 150GB SSD space.",
+                        coverImage: "./uncherted.jpeg",
+                        magnet: "magnet:?xt=urn:btih:963A0879AF19DEB41A155EA5B9C0627397022D9B&dn=UNCHARTED%3A+Legacy+of+Thieves+Collection+%28v1.0.20122+%2B+Bonus+OSTs%2C+MULTi21%29+%5BFitGirl+Repack%2C+Selective+Download+-+from+19.6+GB%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Fopentor.org%3A2710&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.dler.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Fipv4.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" 
+                    },
+                    { 
+                        title: "God of War", 
+                        genre: "RPG", 
+                        originalSize: 125, 
+                        repackSize: 86.4, 
+                        year: 2023, 
+                        features: "Ragnarök Digital Deluxe Edition, All DLCs/Bonuses, 6 GB VRAM Bypass.", 
+                        requirements: "RTX 2080, 16GB RAM, 125GB SSD space.",
+                        coverImage: "./gow.jpeg",
+                        magnet: "magnet:?xt=urn:btih:1D15BD27B1D5053471634205E768C1B9AD73D176&dn=God+of+War%3A+Ragnar%26ouml%3Bk+-+Digital+Deluxe+Edition+%28%2B+All+DLCs%2FBonuses+%2B+6+GB+VRAM+Bypass%2C+MULTi22%29+%5BFitGirl+Repack%2C+Selective+Download+-+from+65.1+GB%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.theoks.net%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=https%3A%2F%2Ftracker.tamersunion.org%3A443%2Fannounce&tr=udp%3A%2F%2Fexplodie.org%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.bt4g.com%3A2095%2Fannounce&tr=udp%3A%2F%2Fbt2.archive.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fbt1.archive.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.filemail.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker1.bt.moack.co.kr%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" 
+                    },
+                    { 
+                        title: "Red Dead Redemption 2", 
+                        genre: "Action", 
+                        originalSize: 150, 
+                        repackSize: 82.3, 
+                        year: 2019, 
+                        features: "Ultimate Edition content, optional 4K textures.", 
+                        requirements: "GTX 1060 6GB, 12GB RAM, 150GB disk space.",
+                        coverImage: "./rdr2.jpeg",
+                        magnet: "magnet:?xt=urn:btih:18A89755E51616C9E8E904FF360E364DEB4B0922&dn=Red+Dead+Redemption+2%3A+Ultimate+Edition+%28Build+1491.50+%2B+UE+Unlocker%2C+MULTi13%29+%5BFitGirl+Repack%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.gbitt.info%3A80%2Fannounce&tr=http%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.theoks.net%3A6969%2Fannounce&tr=https%3A%2F%2Ftracker.tamersunion.org%3A443%2Fannounce&tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&tr=http%3A%2F%2Fopen.acgtracker.com%3A1096%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" 
+                    },
+                    { 
+                        title: "The Witcher 3", 
+                        genre: "RPG", 
+                        originalSize: 50, 
+                        repackSize: 28.5, 
+                        year: 2015, 
+                        features: "Game of the Year Edition, all expansions.", 
+                        requirements: "GTX 770, 8GB RAM, 50GB disk space.",
+                        coverImage: "./witcher.jpeg",
+                        magnet: "magnet:?xt=urn:btih:7F9F2EA2A2BD89C65D14ED816987938FD5D48B07&dn=The+Witcher+3%3A+Wild+Hunt+-+Complete+Edition+%28GOG%2FSteam+v4.00+%2B+All+DLCs+%2B+Bonus+Content%2C+MULTi17%29+%5BFitGirl+Repack%2C+Selective+Download+-+from+31.7+GB%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Fopentor.org%3A2710&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.dler.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Fipv4.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" 
+                    },
+                    { 
+                        title: "Forza Horizon 5", 
+                        genre: "Racing", 
+                        originalSize: 110, 
+                        repackSize: 53.1, 
+                        year: 2021, 
+                        features: "Premium Edition, all car packs included.", 
+                        requirements: "GTX 970, 8GB RAM, 110GB SSD space.",
+                        coverImage: "http://googleusercontent.com/image_collection/image_retrieval/15015202321507434293_0",
+                        magnet: "magnet:?xt=urn:btih:20BF4E706A2401F5643AB9F3A030F4DA8B13873B&dn=Forza+Horizon+5%3A+Premium+Edition+%28v1.656.386.0+%2B+58+DLCs+%2B+100%25+Unlock+Save+%2B+Multiplayer%2C+MULTi16%29+%5BFitGirl+Repack%2C+Selective+Download+-+from+73.5+GB%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.gbitt.info%3A80%2Fannounce&tr=http%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.theoks.net%3A6969%2Fannounce&tr=https%3A%2F%2Ftracker.tamersunion.org%3A443%2Fannounce&tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&tr=http%3A%2F%2Fopen.acgtracker.com%3A1096%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" 
+                    },
+                    { 
+                        title: "Spider Man 2", 
+                        genre: "Action", 
+                        originalSize: 85, 
+                        repackSize: 49.9, 
+                        year: 2023, 
+                        features: "Digital Deluxe Edition, 2 DLCs, Unlocker, Bonus Soundtrack.", 
+                        requirements: "GTX 1070, 16GB RAM, 85GB SSD space.",
+                        coverImage: "./spiderman 2.jpeg",
+                        magnet: "magnet:?xt=urn:btih:9B6604CC80F7701721C0C23BF416748D78CCA06E&dn=Marvel%26%23039%3Bs+Spider-Man+2%3A+Digital+Deluxe+Edition+%28v1.130.1.0%2Fv1.131.0.0+%2B+2+DLCs+%2B+Unlocker+%2B+Bonus+Soundtrack%2C+MULTi26%29+%5BFitGirl+Repack%2C+Selective+Download+-+from+64.5+GB%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.theoks.net%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=https%3A%2F%2Ftracker.tamersunion.org%3A443%2Fannounce&tr=udp%3A%2F%2Fexplodie.org%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.bt4g.com%3A2095%2Fannounce&tr=udp%3A%2F%2Fbt2.archive.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fbt1.archive.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.filemail.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker1.bt.moack.co.kr%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" 
+                    },
+                    { 
+                        title: "Grand Theft Auto V / GTA 5", 
+                        genre: "Shooter", 
+                        originalSize: 80, 
+                        repackSize: 45.6, 
+                        year: 2020, 
+                        features: "v1.0.3411/1.70 + NVE Platinum Modpack + Bonus Content.", 
+                        requirements: "GTX 1060, 8GB RAM, 80GB disk space.",
+                        coverImage: "./gta 5.jpeg",
+                        magnet: "magnet:?xt=urn:btih:9FB620FFB9CB0D6F68AAA042DF9741D68221BF2D&dn=Grand+Theft+Auto+V+%28v1.0.3411%2F1.70+%2B+NVE+Platinum+Modpack+%2B+Bonus+Content%2C+MULTi13%29+%5BFitGirl+Repack%2C+Selective+Download+-+from+51.1+GB%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.theoks.net%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=https%3A%2F%2Ftracker.tamersunion.org%3A443%2Fannounce&tr=udp%3A%2F%2Fexplodie.org%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.bt4g.com%3A2095%2Fannounce&tr=udp%3A%2F%2Fbt2.archive.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fbt1.archive.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.filemail.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker1.bt.moack.co.kr%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" 
+                    },
+                    { 
+                        title: "Red Dead Redemption 2: Ultimate Edition", 
+                        genre: "Adventure", 
+                        originalSize: 10, 
+                        repackSize: 6.5, 
+                        year: 2022, 
+                        features: "Build 1491.50 + UE Unlocker.", 
+                        requirements: "GTX 780, 8GB RAM, 10GB disk space.",
+                        coverImage: "./rdr2.jpeg",
+                       
+                        magnet: "magnet:?xt=urn:btih:18A89755E51616C9E8E904FF360E364DEB4B0922&dn=Red+Dead+Redemption+2%3A+Ultimate+Edition+%28Build+1491.50+%2B+UE+Unlocker%2C+MULTi13%29+%5BFitGirl+Repack%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.gbitt.info%3A80%2Fannounce&tr=http%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.theoks.net%3A6969%2Fannounce&tr=https%3A%2F%2Ftracker.tamersunion.org%3A443%2Fannounce&tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&tr=http%3A%2F%2Fopen.acgtracker.com%3A1096%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" 
+                    }
+            ];
+
+            // --- DOM ELEMENTS ---
+            const mainNavButtons = document.querySelectorAll('.main-nav-button');
+            const pageSections = document.querySelectorAll('.page-section');
+            const totalGamesEl = document.getElementById('total-games');
+            const avgCompressionEl = document.getElementById('avg-compression');
+            const popularGenreEl = document.getElementById('popular-genre');
+            const totalSavedEl = document.getElementById('total-saved');
+            const searchInput = document.getElementById('search-input');
+            const genreFiltersContainer = document.getElementById('genre-filters');
+            const gameListContainer = document.getElementById('game-list');
+
+            let genreChart, sizeChart;
+            let activeGenre = 'All';
+            let chartsInitialized = false;
+
+            // --- PAGE NAVIGATION LOGIC ---
+            mainNavButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetPageId = button.dataset.page;
+
+                    // Update active button state
+                    mainNavButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    // Show/Hide pages
+                    pageSections.forEach(section => {
+                        if (section.id === targetPageId) {
+                            section.classList.add('active');
+                        } else {
+                            section.classList.remove('active');
+                        }
+                    });
+
+                    // Initialize charts only when the 'games' page is first shown
+                    if (targetPageId === 'games' && !chartsInitialized) {
+                        initializeCharts();
+                        updateDashboard();
+                        chartsInitialized = true;
+                    }
+                });
+            });
+
+
+            // --- CHART INITIALIZATION ---
+            const initializeCharts = () => {
+                const genreCtx = document.getElementById('genre-chart').getContext('2d');
+                genreChart = new Chart(genreCtx, {
+                    type: 'doughnut',
+                    data: { labels: [], datasets: [{ data: [], backgroundColor: ['#4A6D7C', '#a5b4fc', '#fbbf24', '#7dd3fc', '#f87171', '#86efac'] }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+
+                const sizeCtx = document.getElementById('size-chart').getContext('2d');
+                sizeChart = new Chart(sizeCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Original Size', 'Repack Size'],
+                        datasets: [{
+                            label: 'Total Size (GB)',
+                            data: [0, 0],
+                            backgroundColor: ['#a5b4fc', '#4A6D7C'],
+                            borderColor: ['#a5b4fc', '#4A6D7C'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+                });
+            };
+            
+            // --- DATA PROCESSING & RENDERING (DASHBOARD) ---
+            const updateDashboard = () => {
+                if (!chartsInitialized) return; // Don't run if charts aren't ready
+                const searchQuery = searchInput.value.toLowerCase();
+                
+                const filteredGames = gameData.filter(game => {
+                    const matchesGenre = activeGenre === 'All' || game.genre === activeGenre;
+                    const matchesSearch = game.title.toLowerCase().includes(searchQuery);
+                    return matchesGenre && matchesSearch;
+                });
+
+                // 1. Update metric cards
+                if (filteredGames.length > 0) {
+                    const totalOriginalSize = filteredGames.reduce((sum, g) => sum + g.originalSize, 0);
+                    const totalRepackSize = filteredGames.reduce((sum, g) => sum + g.repackSize, 0);
+                    const totalSaved = totalOriginalSize - totalRepackSize;
+                    const avgCompression = totalOriginalSize > 0 ? 100 * (totalSaved / totalOriginalSize) : 0;
+                    
+                    const genreCounts = filteredGames.reduce((acc, game) => {
+                        acc[game.genre] = (acc[game.genre] || 0) + 1;
+                        return acc;
+                    }, {});
+                    const popularGenre = Object.keys(genreCounts).reduce((a, b) => genreCounts[a] > genreCounts[b] ? a : b, '-');
+
+                    totalGamesEl.textContent = filteredGames.length;
+                    avgCompressionEl.textContent = `${avgCompression.toFixed(1)}%`;
+                    popularGenreEl.textContent = popularGenre;
+                    totalSavedEl.textContent = `${totalSaved.toFixed(1)} GB`;
+                } else {
+                     totalGamesEl.textContent = '0';
+                     avgCompressionEl.textContent = '0%';
+                     popularGenreEl.textContent = '-';
+                     totalSavedEl.textContent = '0 GB';
+                }
+                
+                // 2. Render game list
+                gameListContainer.innerHTML = '';
+                if (filteredGames.length === 0) {
+                    gameListContainer.innerHTML = `<p class="text-center text-gray-500 col-span-full">No games found matching your criteria.</p>`;
+                } else {
+                    filteredGames.forEach(game => {
+                        const compression = 100 * (game.originalSize - game.repackSize) / game.originalSize;
+                        const card = `
+                            <div class="glass-card rounded-lg p-5 flex flex-col">
+                                <img src="${game.coverImage}" alt="${game.title} Cover Art" class="w-full h-auto object-cover rounded-md mb-4 aspect-square">
+                                <div class="flex-grow">
+                                    <h3 class="text-xl font-bold text-[#4A6D7C]">${game.title} (${game.year})</h3>
+                                    <p class="text-sm text-gray-500 mb-3">${game.genre}</p>
+                                    <div class="flex justify-between items-center text-sm mb-2">
+                                        <span>Original: <strong class="font-semibold">${game.originalSize} GB</strong></span>
+                                        <span>Repack: <strong class="font-semibold">${game.repackSize.toFixed(1)} GB</strong></span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                                        <div class="bg-gradient-to-r from-[#4A6D7C] to-[#a5b4fc] h-2.5 rounded-full" style="width: ${100 - compression}%"></div>
+                                    </div>
+                                    <p class="text-center text-green-700 font-semibold mb-3">You save ${compression.toFixed(1)}%</p>
+                                    ${game.magnet ? `<a href="${game.magnet}" class="block mt-2 text-center text-white font-semibold bg-gradient-to-r from-[#4A6D7C] to-[#a5b4fc] px-4 py-2 rounded-lg shadow hover:from-[#a5b4fc] hover:to-[#4A6D7C] transition" target="_blank" rel="noopener">Magnet Download</a>` : ''}
+                                </div>
+                                <div class="game-card-details space-y-2 text-sm text-gray-600 mt-2">
+                                    <p><strong>Features:</strong> ${game.features}</p>
+                                    <p><strong>Requirements:</strong> ${game.requirements}</p>
+                                </div>
+                                <button class="toggle-details mt-4 text-sm font-semibold text-[#4A6D7C] hover:text-[#a5b4fc] transition">Toggle Details</button>
+                            </div>
+                        `;
+                        gameListContainer.innerHTML += card;
+                    });
+                }
+
+                // 3. Update charts
+                const genreDistribution = filteredGames.reduce((acc, game) => {
+                    acc[game.genre] = (acc[game.genre] || 0) + 1;
+                    return acc;
+                }, {});
+                genreChart.data.labels = Object.keys(genreDistribution);
+                genreChart.data.datasets[0].data = Object.values(genreDistribution);
+                genreChart.update();
+
+                const totalOriginal = filteredGames.reduce((sum, g) => sum + g.originalSize, 0);
+                const totalRepack = filteredGames.reduce((sum, g) => sum + g.repackSize, 0);
+                sizeChart.data.datasets[0].data = [totalOriginal, totalRepack];
+                sizeChart.update();
+            };
+
+            // --- EVENT LISTENERS ---
+            const setupEventListeners = () => {
+                searchInput.addEventListener('input', updateDashboard);
+                
+                genreFiltersContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('genre-button')) {
+                        document.querySelector('.genre-button.active').classList.remove('active');
+                        e.target.classList.add('active');
+                        activeGenre = e.target.dataset.genre;
+                        updateDashboard();
+                    }
+                });
+
+                gameListContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('toggle-details')) {
+                        const details = e.target.previousElementSibling;
+                        details.classList.toggle('open');
+                    }
+                });
+                
+                document.querySelector('#contact form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    alert('Thank you for your message! (This is a demo and does not send data).');
+                    e.target.reset();
+                });
+            };
+
+            // --- INITIAL SETUP ---
+            const initialize = () => {
+                // Create genre filter buttons for the dashboard
+                const genres = ['All', ...new Set(gameData.map(g => g.genre))];
+                genreFiltersContainer.innerHTML = genres.map(genre =>
+                    `<button class="genre-button ${genre === 'All' ? 'active' : ''}" data-genre="${genre}">${genre}</button>`
+                ).join('');
+                
+                setupEventListeners();
+                // Note: The dashboard and charts are now initialized only when the user clicks the "All Games" tab for the first time.
+            };
+
+            initialize();
+        });
+    </script>
+</body>
+</html>
